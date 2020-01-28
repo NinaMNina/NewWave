@@ -12,7 +12,7 @@ Class {
 	#name : #NewWaveMagritteContainerCreator,
 	#superclass : #Object,
 	#instVars : [
-		'do'
+		'dataObject'
 	],
 	#category : #'NewWave-ObjectPreparator'
 }
@@ -20,20 +20,44 @@ Class {
 { #category : #'as yet unclassified' }
 NewWaveMagritteContainerCreator class >> dataObject: do [
 	^ self new
-	do: do;
+	dataObject: do;
 	yourself
 ]
 
 { #category : #initialization }
-NewWaveMagritteContainerCreator >> addValues: anInstanceOfEntity [
-	do properties do: [ :el | anInstanceOfEntity instVarNamed: el varName put: el varValue ].
+NewWaveMagritteContainerCreator >> addMagritteMethods: newClass var: el [
+  | methodTemplate methodSource madesc visible |
+	madesc := self getMADictionary.
+  methodTemplate := 'description{1}
+  <magritteDescription>
+	^ {2} new 
+		accessor: #{3};
+		label: ''{4}'';
+		priority: 10;
+		visible: {5};
+		yourself'.
+		visible := (el varName = 'id') ifTrue: [ false ] ifFalse: [ true ]. 
+  methodSource := methodTemplate format:  {el varName capitalized}, 
+		{madesc at: el varType}, 
+		{el varName},
+		{el varName},
+		{visible}.
+  newClass class compile: methodSource.
+]
+
+{ #category : #initialization }
+NewWaveMagritteContainerCreator >> addValues: anInstanceOfEntity [ 
+	dataObject properties do: [ :el | 
+		anInstanceOfEntity instVarNamed: el varName put: el varValue. 
+		self addMagritteMethods: anInstanceOfEntity var: el.
+		].
 	^ anInstanceOfEntity.
 ]
 
 { #category : #initialization }
 NewWaveMagritteContainerCreator >> createEntity [
 | newClass x |
-	newClass := Object subclass: do className1 instanceVariableNames: self generateInstanceVariables classVariableNames: '' package: 'NewWaveWebApp'.
+	newClass := Object subclass: dataObject className1 instanceVariableNames: self generateInstanceVariables classVariableNames: '' package: 'NewWaveFieldUserTask-Entities'.
 	"x := newClass new."
 	^ self addValues: newClass new.
 	"^ newClass."
@@ -43,7 +67,7 @@ NewWaveMagritteContainerCreator >> createEntity [
 NewWaveMagritteContainerCreator >> createMaContainer [
 	| maContainer |
 	maContainer := MAPriorityContainer new.
-	maContainer propertyAt: #label put: do className1. 
+	maContainer propertyAt: #label put: dataObject className1. 
 	maContainer addAll: self createMaDescriptions.
 	^ maContainer
 ]
@@ -51,7 +75,7 @@ NewWaveMagritteContainerCreator >> createMaContainer [
 { #category : #initialization }
 NewWaveMagritteContainerCreator >> createMaDescriptions [
 	| madesc |
-	^ do properties collect: [ :each |
+	^ dataObject properties collect: [ :each |
 		| el |
 		madesc := NewWaveDODescriptionSelector new.
 		el := madesc descriptionDictionary at: each varType.
@@ -63,21 +87,32 @@ NewWaveMagritteContainerCreator >> createMaDescriptions [
 ]
 
 { #category : #accessing }
-NewWaveMagritteContainerCreator >> do [
-	^ do
+NewWaveMagritteContainerCreator >> dataObject: anObject [
+	dataObject := anObject
 ]
 
 { #category : #accessing }
-NewWaveMagritteContainerCreator >> do: anObject [
-	do := anObject
+NewWaveMagritteContainerCreator >> do [
+	^ dataObject
 ]
 
 { #category : #initialization }
 NewWaveMagritteContainerCreator >> generateInstanceVariables [
 	| temp |
 	temp := String new.
-	do properties do: [ :el | temp := temp, el varName asString, ' ' ].
+	dataObject properties do: [ :el | temp := temp, el varName asString, ' ' ].
 	^ temp
+]
+
+{ #category : #initialization }
+NewWaveMagritteContainerCreator >> getMADictionary [
+	| dict |
+	dict := Dictionary new.
+	dict at: 'ByteString' put: 'MAStringDescription'.
+	dict at: 'SmallInteger' put: 'MANumberDescription'.
+	dict at: 'Date' put: 'MADateDescription'.
+	dict at: 'Boolean' put: 'MABooleanDescription'.	
+	^dict
 ]
 
 { #category : #initialization }

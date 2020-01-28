@@ -34,15 +34,10 @@ Class {
 	#name : #WaveEngine,
 	#superclass : #Object,
 	#instVars : [
-		'mainExecutor',
-		'joinHandler',
-		'subExecutors',
 		'engineAnnouncer',
-		'workList',
-		'activations',
 		'scheduler',
-		'process',
-		'pluginData'
+		'pluginData',
+		'processHandlers'
 	],
 	#category : #'NewWave-Engine'
 }
@@ -50,7 +45,7 @@ Class {
 { #category : #'as yet unclassified' }
 WaveEngine class >> initialNode: startNode [
 	| we | 
-	we := WaveExecutor initialNode: startNode.
+	we := NWExecutor initialNode: startNode.
 	^ self new 
 		addExecutor: we;
 		yourself.
@@ -59,45 +54,18 @@ WaveEngine class >> initialNode: startNode [
 { #category : #'as yet unclassified' }
 WaveEngine class >> initialProcess: aProcess [
 	| we | 
-	we := WaveExecutor initialNode: aProcess initialFlowElement.
+	we := NWExecutor initialNode: aProcess initialFlowElement.
 	^ self new 
 		addExecutor: we;
 		process: aProcess;
 		yourself.
 ]
 
-{ #category : #accessing }
-WaveEngine >> activations [
-	^ activations
-]
-
-{ #category : #accessing }
-WaveEngine >> addExecutor: anExecutor [
-	self mainExecutor: anExecutor.
-	self mainExecutor engine: self.
-	"parameter iz announcera mi je seekvenca "
-	engineAnnouncer
-		when: JoinEventAnnouncer
-		do: [ :ann | 
-			| tmpExecutor rez |
-			tmpExecutor := joinHandler addSequenceToExecutors: ann parameter.
-			rez := joinHandler checkIsExecutorCompleted: tmpExecutor.
-			rez
-				ifTrue: [ | an |
-					an := tmpExecutor returnNodeAfterJoin.
-					mainExecutor flowHandler node: an.
-					mainExecutor tryToExecuteNext: tmpExecutor joinNode ].
-			('Ending-SUB-Worker process is '
-				, ann executor worker process identityHash asString) logCr.
-			ann executor worker stop ]
-]
-
-{ #category : #accessing }
-WaveEngine >> addSubExecutor: anInitialSequence [
-	| se |
-	se := SubExecutor initialSequence: anInitialSequence engine: self.
-	se startSubExecutor.
-	subExecutors add: se.
+{ #category : #adding }
+WaveEngine >> addProcess: aProcess name: aProcessName [
+	| processHandler |
+	processHandler := NWProcessHandler initialProcess: aProcess engine: self.
+	processHandlers at: aProcessName put: processHandler. 
 ]
 
 { #category : #accessing }
@@ -113,51 +81,33 @@ WaveEngine >> engineAnnouncer: anAnnouncer [
 { #category : #accessing }
 WaveEngine >> initialize [
 	super initialize.
-	self joinHandler: (JoinHandler context: self).
-	self subExecutors: OrderedCollection new.
 	self engineAnnouncer: Announcer new.
-	workList := WaveWorkList new.
-	activations := Dictionary new.
-	pluginData := Dictionary new
+	pluginData := Dictionary new.
+	processHandlers := Dictionary new.
 	"scheduler := TaskScheduler new."
 	"scheduler start."
 ]
 
-{ #category : #accessing }
-WaveEngine >> joinHandler [
-	^ joinHandler 
+{ #category : #finalization }
+WaveEngine >> processHandler: aProcessName [
+	^ processHandlers at: aProcessName.
 ]
 
-{ #category : #accessing }
-WaveEngine >> joinHandler: aJoinHandler [
-	joinHandler := aJoinHandler 
+{ #category : #adding }
+WaveEngine >> reExecuteProcess: aProcessName [
+	| processHandler process |
+	process := (processHandlers at: aProcessName) process.
+	processHandler := NWProcessHandler initialProcess: process engine: self.
+	processHandlers at: aProcessName put: processHandler. 
+	processHandler startEngine.
 ]
 
-{ #category : #accessing }
-WaveEngine >> logNewActivation: anActivation on: anExecutor forNode: aNode [
-"TODO when adding a history"
-
-
-]
-
-{ #category : #accessing }
-WaveEngine >> mainExecutor [
-	^ mainExecutor
-]
-
-{ #category : #accessing }
-WaveEngine >> mainExecutor: executors [
-	mainExecutor := executors 
-]
-
-{ #category : #accessing }
-WaveEngine >> process [
-	^ process
-]
-
-{ #category : #accessing }
-WaveEngine >> process: anObject [
-	process := anObject
+{ #category : #adding }
+WaveEngine >> restartProcess: aProcessName newProcess: proc1 [
+	| processHandler |
+	processHandler := NWProcessHandler initialProcess: proc1 engine: self.
+	processHandlers at: aProcessName put: processHandler. 
+	processHandler startEngine.
 ]
 
 { #category : #accessing }
@@ -165,31 +115,16 @@ WaveEngine >> scheduler [
 	^ scheduler
 ]
 
-{ #category : #accessing }
-WaveEngine >> startEngine [
-	mainExecutor tryToExecuteNext.
-	mainExecutor waveAnnouncer announce: StartAnnouncer new.
+{ #category : #adding }
+WaveEngine >> startProcess: aProcessName [
+	| processHandler |
+	processHandler := processHandlers at: aProcessName.
+	processHandler startEngine.
 ]
 
-{ #category : #accessing }
-WaveEngine >> stopEngine [
-	"scheduler stop."
-	pluginData do: [ :plugin | plugin stop ].
-	"I am force stopping all the workers in the engine."
-	mainExecutor workers valuesDo: [ :d | d stop ].
-]
-
-{ #category : #accessing }
-WaveEngine >> subExecutors [
-	^ subExecutors 
-]
-
-{ #category : #accessing }
-WaveEngine >> subExecutors: aSubExecutor [
-	subExecutors := aSubExecutor 
-]
-
-{ #category : #accessing }
-WaveEngine >> workList [
-	^ workList
+{ #category : #adding }
+WaveEngine >> stopProcess: aProcessName [
+	| processHandler |
+	processHandler := processHandlers at: aProcessName.
+	processHandler stopEngine.
 ]

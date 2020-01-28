@@ -1,6 +1,7 @@
 "
 I am a class that should be used for mapping classes.
 I contain class description, and all properties of the class that should be mapped.
+I also contain information abount the process which I belond.
 
     Instance Variables
 	className:		<String>Name of the class to be mapped
@@ -11,7 +12,12 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'className',
-		'properties'
+		'properties',
+		'taskName',
+		'taskDescription',
+		'processName',
+		'processId',
+		'processInstanceId'
 	],
 	#category : #'NewWave-ObjectPreparator'
 }
@@ -21,7 +27,7 @@ NewWaveDOClassDescription class >> neoJsonMapping: mapper [
 	"For inheritance mapping to work, the schema/classname must be self,
 	but the instance variables have to be enumerated manually per class"
 	mapper for: self do: [ :mapping |
-		mapping mapInstVars: #(className properties) ] 
+		mapping mapInstVars: #(className properties taskName taskDescription) ] 
 ]
 
 { #category : #accessing }
@@ -47,6 +53,36 @@ NewWaveDOClassDescription >> initialize [
 ]
 
 { #category : #accessing }
+NewWaveDOClassDescription >> processId [
+	^ processId
+]
+
+{ #category : #accessing }
+NewWaveDOClassDescription >> processId: anObject [
+	processId := anObject
+]
+
+{ #category : #accessing }
+NewWaveDOClassDescription >> processInstanceId [
+	^ processInstanceId
+]
+
+{ #category : #accessing }
+NewWaveDOClassDescription >> processInstanceId: anObject [
+	processInstanceId := anObject
+]
+
+{ #category : #accessing }
+NewWaveDOClassDescription >> processName [
+	^ processName
+]
+
+{ #category : #accessing }
+NewWaveDOClassDescription >> processName: anObject [
+	processName := anObject
+]
+
+{ #category : #accessing }
 NewWaveDOClassDescription >> properties [
 	^ properties
 ]
@@ -54,4 +90,24 @@ NewWaveDOClassDescription >> properties [
 { #category : #accessing }
 NewWaveDOClassDescription >> properties: anObject [
 	properties := anObject
+]
+
+{ #category : #accessing }
+NewWaveDOClassDescription >> taskDescription [
+	^ taskDescription
+]
+
+{ #category : #accessing }
+NewWaveDOClassDescription >> taskDescription: anObject [
+	taskDescription := anObject
+]
+
+{ #category : #accessing }
+NewWaveDOClassDescription >> taskName [
+	^ taskName
+]
+
+{ #category : #accessing }
+NewWaveDOClassDescription >> taskName: anObject [
+	taskName := anObject
 ]

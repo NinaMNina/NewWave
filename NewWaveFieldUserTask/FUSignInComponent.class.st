@@ -12,7 +12,7 @@ Class {
 
 { #category : #operations }
 FUSignInComponent >> goToAllTasksView: aUser [ 
-	self call: (FUAllUserTasksComponent new "tasks: aUser tasks" )
+	self call: (FUAllTasksListComponent new  )
 	"self call: (FUDoTaskComponent new)"
 ]
 

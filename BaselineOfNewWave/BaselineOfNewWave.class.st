@@ -14,19 +14,39 @@ BaselineOfNewWave >> baseline: spec [
 			self teapot: spec.
 			"self scheduler: spec."
 			self scheduler2: spec.
+			self roassal: spec.
+			self seaside: spec.
+			self bootstrap: spec.
+			self magritte: spec.
+			self neoJson: spec.
+			self zinc: spec.
 
 			"Packages"
-			spec package: 'NewWave' with: [spec requires: #(TaskIt Scheduler)].
+			spec 
+				package: 'NewWave' 
+				with: [ spec requires: #(TaskIt Scheduler) ].
+			spec package: 'NewWave-Plugin'.
+			spec 
+				package: 'NewWave-ObjectPreparator' 
+				with: [ spec requires: #(NewWave) ].
+			spec 
+				package: 'NewWaveFieldUserTask' 
+				with: [ spec requires: #(ZincHTTPComponents Core 'NewWave-ObjectPreparator' NeoJSON Magritte Seaside3 Bootstrap 'NewWave-Server') ].
+			spec
+				package: 'NewWave-Roassal'
+				with: [ spec requires: #(NewWave Roassal3) ].
 			spec
 				package: 'NewWave-Server'
 				with: [ spec requires: #(NewWave Teapot) ].
-			spec package: 'NewWave-Plugin'.
+				
 			"Groups"
 			spec group: 'Core' with: #(NewWave).
+			spec group: 'WebTask' with: #( 'NewWaveFieldUserTask' ).
 			spec group: 'TeapotServer' with: #(Core Teapot).
+			spec group: 'Visualization' with: #(Core 'NewWave-Roassal').
 			spec
 				group: 'All'
-				with: #(Core TeapotServer 'NewWave-Plugin') ]
+				with: #(Core TeapotServer 'NewWave-Plugin' WebTask Visualization) ]
 ]
 
 { #category : #accessing }
@@ -43,8 +63,9 @@ BaselineOfNewWave >> magritte: spec [
 	spec 
 		baseline: 'Magritte'
 		with: [ 
-			spec repository: 'github://magritte-metamodel/magritte:v3.5.4' 
-		 ]
+			spec 
+				loads: #( Seaside );
+				repository: 'github://magritte-metamodel/magritte:master/source' ]
 ]
 
 { #category : #accessing }
@@ -59,6 +80,15 @@ BaselineOfNewWave >> neoJson: spec [
 { #category : #accessing }
 BaselineOfNewWave >> projectClass [ 
 	^ MetacelloCypressBaselineProject
+]
+
+{ #category : #accessing }
+BaselineOfNewWave >> roassal: spec [
+	spec 
+		baseline: 'Roassal3'
+		with: [ 
+			spec repository: 'github://ObjectProfile/Roassal3/src'
+		 ]
 ]
 
 { #category : #accessing }
@@ -83,7 +113,7 @@ BaselineOfNewWave >> scheduler: spec [
 { #category : #accessing }
 BaselineOfNewWave >> seaside: spec [
 	spec 
-		baseline: 'Seaside'
+		baseline: 'Seaside3'
 		with: [ 
 			spec repository: 'github://SeasideSt/Seaside:master/repository'
 		 ]
@@ -104,5 +134,14 @@ BaselineOfNewWave >> teapot: spec [
 		baseline: 'Teapot'
 		with: [ 
 			spec repository: 'github://zeroflag/teapot:master/source'
+		 ]
+]
+
+{ #category : #accessing }
+BaselineOfNewWave >> zinc: spec [
+	spec 
+		baseline: 'ZincHTTPComponents'
+		with: [ 
+			spec repository: 'github://svenvc/zinc:v3.0.1/repository'
 		 ]
 ]
