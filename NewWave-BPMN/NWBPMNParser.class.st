@@ -41,11 +41,12 @@ NWBPMNParser >> elementsDict: anObject [
 
 { #category : #'as yet unclassified' }
 NWBPMNParser >> getBPMNfromStartEvent [
-	| se ee all dict|
+	| se ee all dict |
 	se := self parseStartEvent: (self bpmn findElementNamed: 'startEvent').
 	ee := self parseEndEvent: (self bpmn findElementNamed: 'endEvent').
 	all := self bpmn findElementNamed: 'process'.
 	all := all allElements asOrderedCollection.
+	all notEmpty ifTrue: [all removeAt: 1].
 	dict := Dictionary new.
 	dict at: ee id put: ee.
 	dict at: se id put: se.
@@ -96,7 +97,9 @@ NWBPMNParser >> parseBPMN [
 
 { #category : #parsing }
 NWBPMNParser >> parseBPMNNode: element [
-	
+	| node |
+	node := self elementsDict at: element name ifAbsent: [^nil].
+	^ node createObject: element.
 ]
 
 { #category : #parsing }
