@@ -3,7 +3,8 @@ Class {
 	#superclass : #Object,
 	#instVars : [
 		'path',
-		'bpmn'
+		'bpmn',
+		'elementsDict'
 	],
 	#category : #'NewWave-BPMN'
 }
@@ -28,6 +29,16 @@ NWBPMNParser >> createNewProcess [
 	^ process
 ]
 
+{ #category : #accessing }
+NWBPMNParser >> elementsDict [
+	^ elementsDict 
+]
+
+{ #category : #accessing }
+NWBPMNParser >> elementsDict: anObject [
+	elementsDict := anObject
+]
+
 { #category : #'as yet unclassified' }
 NWBPMNParser >> getBPMNfromStartEvent [
 	| se ee all dict|
@@ -38,7 +49,6 @@ NWBPMNParser >> getBPMNfromStartEvent [
 	dict := Dictionary new.
 	dict at: ee id put: ee.
 	dict at: se id put: se.
-	self halt.
 	all do: [ :node |  
 		((node isNamed: 'startEvent') or: [node isNamed: 'endEvent']) ifFalse:
 			[dict at: (node attributeAt: 'id') put: (self parseBPMNNode: node)]
@@ -62,7 +72,18 @@ NWBPMNParser >> getBPMNname [
 
 { #category : #initialization }
 NWBPMNParser >> initialize [ 
-	super initialize 
+	super initialize.
+	self elementsDict: {
+			('exclusiveGateway' -> NWBPMNExGateway new) .
+			('parallelGateway' -> NWBPMNParGateway new). 
+			('task' -> NWBPMNTask new). 
+			('userTask' -> NWBPMNUserTask new). 
+			('serviceTask' -> NWBPMNServiceTask new). 
+			('callActivity' -> NWBPMNCallActivity new). 
+			('dataObject' -> NWBPMNDataObject new). 
+			('terminateEndEvent' -> NWBPMNTermEndEvent new). 
+			('messageStartEvent' -> NWBPMNMessageStartEvent new). 
+			('messageEndEvent' -> NWBPMNMessageEndEvent new). } asDictionary 
 ]
 
 { #category : #parsing }
