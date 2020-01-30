@@ -20,6 +20,12 @@ NWBPMNParser >> bpmn: anObject [
 ]
 
 { #category : #'as yet unclassified' }
+NWBPMNParser >> createFlow: se usingDict: dict [
+	self halt.
+	^ se
+]
+
+{ #category : #'as yet unclassified' }
 NWBPMNParser >> createNewProcess [
 	|process startEvent|
 	self parseBPMN.
@@ -42,19 +48,19 @@ NWBPMNParser >> elementsDict: anObject [
 { #category : #'as yet unclassified' }
 NWBPMNParser >> getBPMNfromStartEvent [
 	| se ee all dict |
-	se := self parseStartEvent: (self bpmn findElementNamed: 'startEvent').
 	ee := self parseEndEvent: (self bpmn findElementNamed: 'endEvent').
-	all := self bpmn findElementNamed: 'process'.
-	all := all allElements asOrderedCollection.
-	all notEmpty ifTrue: [all removeAt: 1].
 	dict := Dictionary new.
-	dict at: ee id put: ee.
-	dict at: se id put: se.
-	all do: [ :node |  
-		((node isNamed: 'startEvent') or: [node isNamed: 'endEvent']) ifFalse:
-			[dict at: (node attributeAt: 'id') put: (self parseBPMNNode: node)]
+	all := self bpmn findElementNamed: 'process'.
+	all descendantElementsDo: [ :each | 
+		(each isNamed: 'startEvent') 
+			ifTrue: [ se := (self parseStartEvent: (self bpmn findElementNamed: 'startEvent')).
+						dict at: (each attributeAt: 'id') 
+								put: se ]
+			ifFalse:	[dict at: (each attributeAt: 'id') 
+								put: (self parseBPMNNode: each) ]
 		].
-	^ se
+	self halt.
+	^ self createFlow: se usingDict: dict
 ]
 
 { #category : #'as yet unclassified' }
@@ -75,11 +81,14 @@ NWBPMNParser >> getBPMNname [
 NWBPMNParser >> initialize [ 
 	super initialize.
 	self elementsDict: {
+			('endEvent' -> NWBPMNEndEvent new). 
+			('sequenceFlow' -> NWBPMNSequenceFlow new). 
 			('exclusiveGateway' -> NWBPMNExGateway new) .
 			('parallelGateway' -> NWBPMNParGateway new). 
 			('task' -> NWBPMNTask new). 
 			('userTask' -> NWBPMNUserTask new). 
 			('serviceTask' -> NWBPMNServiceTask new). 
+			('scriptTask' -> NWBPMNScriptTask new).
 			('callActivity' -> NWBPMNCallActivity new). 
 			('dataObject' -> NWBPMNDataObject new). 
 			('terminateEndEvent' -> NWBPMNTermEndEvent new). 
@@ -135,4 +144,20 @@ NWBPMNParser >> readBPMN [
 	^('D:\Users\Nina M\Desktop\example.bpmn' asFileReference)
     readStreamEncoded: 'cp-1250' do: [ :stream |
         stream upToEnd ].
+]
+
+{ #category : #removing }
+NWBPMNParser >> removeSufficient: all [
+	| all1 retAll naziv |
+	all isEmpty ifTrue: [ ^ all ].
+	all removeAt: 1.
+	all1 := OrderedCollection new.
+	all do: [ :each | 
+				((each isNamed: 'startEvent') or: [ each isNamed: 'endEvent'])
+									ifFalse: [all1 add: each]].
+	retAll := OrderedCollection new.
+	all1 do: [ :each | 
+				((each isNamed: 'process') or: [ each isNamed: 'sequenceFlow'])
+									ifFalse: [retAll add: each]].
+	^ retAll
 ]

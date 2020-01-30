@@ -17,7 +17,6 @@ NWBPMNTask >> createObject: element [
 	| taskObject |
 	taskObject := NWBaseTask new.
 	taskObject description: (element attributeAt: 'description' ifAbsent: '' ).
-	taskObject value: 200.
 	^ taskObject
 ]
 
