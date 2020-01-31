@@ -7,6 +7,15 @@ Class {
 	#category : #'NewWave-BPMN'
 }
 
+{ #category : #'as yet unclassified' }
+NWBPMNDataObject >> createObject: element [
+	| objData |
+	objData := NWDataObject new.
+	objData id: (element attributeAt: 'id').
+	objData name: (element attributeAt: 'name').
+	^ objData
+]
+
 { #category : #accessing }
 NWBPMNDataObject >> dataObject [
 	^ dataObject

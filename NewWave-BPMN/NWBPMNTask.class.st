@@ -8,11 +8,6 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
-NWBPMNTask >> createNode: element [
-	
-]
-
-{ #category : #'as yet unclassified' }
 NWBPMNTask >> createObject: element [
 	| taskObject |
 	taskObject := NWBaseTask new.

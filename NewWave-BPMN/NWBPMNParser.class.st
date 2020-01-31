@@ -27,7 +27,6 @@ NWBPMNParser >> createFlow: dict flows: flows [
 		target := dict at: flow targetRef.
 		source addOutgoingEdge: target.
 		naziv := source className.
-	self halt.
 		(source class == NWStartEvent) ifTrue: [ se := source ] ].
 	^ se
 ]
