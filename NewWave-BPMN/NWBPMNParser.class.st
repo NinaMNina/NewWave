@@ -20,8 +20,15 @@ NWBPMNParser >> bpmn: anObject [
 ]
 
 { #category : #'as yet unclassified' }
-NWBPMNParser >> createFlow: se usingDict: dict [
+NWBPMNParser >> createFlow: dict flows: flows [
+	|source target se naziv |
+	flows do: [ :flow |
+		source := dict at: flow sourceRef.
+		target := dict at: flow targetRef.
+		source addOutgoingEdge: target.
+		naziv := source className.
 	self halt.
+		(source class == NWStartEvent) ifTrue: [ se := source ] ].
 	^ se
 ]
 
@@ -47,20 +54,23 @@ NWBPMNParser >> elementsDict: anObject [
 
 { #category : #'as yet unclassified' }
 NWBPMNParser >> getBPMNfromStartEvent [
-	| se ee all dict |
+	| se ee all dict flowList|
 	ee := self parseEndEvent: (self bpmn findElementNamed: 'endEvent').
 	dict := Dictionary new.
+	flowList := OrderedCollection new.
 	all := self bpmn findElementNamed: 'process'.
 	all descendantElementsDo: [ :each | 
 		(each isNamed: 'startEvent') 
 			ifTrue: [ se := (self parseStartEvent: (self bpmn findElementNamed: 'startEvent')).
 						dict at: (each attributeAt: 'id') 
 								put: se ]
-			ifFalse:	[dict at: (each attributeAt: 'id') 
-								put: (self parseBPMNNode: each) ]
+			ifFalse:	[(each isNamed: 'sequenceFlow')
+				ifTrue: [ flowList add: (self parseBPMNNode: each) ]
+				ifFalse: [ dict at: (each attributeAt: 'id') 
+								put: (self parseBPMNNode: each)]
+						 ]
 		].
-	self halt.
-	^ self createFlow: se usingDict: dict
+	^ self createFlow: dict flows: flowList
 ]
 
 { #category : #'as yet unclassified' }
@@ -108,7 +118,7 @@ NWBPMNParser >> parseBPMN [
 NWBPMNParser >> parseBPMNNode: element [
 	| node |
 	node := self elementsDict at: element name ifAbsent: [^nil].
-	^ node createObject: element.
+	^ (node clone) createObject: element.
 ]
 
 { #category : #parsing }
@@ -144,20 +154,4 @@ NWBPMNParser >> readBPMN [
 	^('D:\Users\Nina M\Desktop\example.bpmn' asFileReference)
     readStreamEncoded: 'cp-1250' do: [ :stream |
         stream upToEnd ].
-]
-
-{ #category : #removing }
-NWBPMNParser >> removeSufficient: all [
-	| all1 retAll naziv |
-	all isEmpty ifTrue: [ ^ all ].
-	all removeAt: 1.
-	all1 := OrderedCollection new.
-	all do: [ :each | 
-				((each isNamed: 'startEvent') or: [ each isNamed: 'endEvent'])
-									ifFalse: [all1 add: each]].
-	retAll := OrderedCollection new.
-	all1 do: [ :each | 
-				((each isNamed: 'process') or: [ each isNamed: 'sequenceFlow'])
-									ifFalse: [retAll add: each]].
-	^ retAll
 ]
